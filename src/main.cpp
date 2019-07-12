@@ -23,11 +23,12 @@ int main(int argc, char **argv){
 	float p[2];
 	int nmax=100;
 	float step = 0.25;
+	size_t offset = 22;
 
 
-	ops >> PosOption(ip_filename) >> PosOption(p[0]) >> PosOption(p[1]) >> PosOption(nmax) >> PosOption(step);
+	ops >> PosOption(ip_filename) >> PosOption(offset) >> PosOption(p[0]) >> PosOption(p[1]) >> PosOption(nmax) >> PosOption(step);
 
-	dat.read_nek5000_nc(ip_filename, 22);
+	dat.read_nek5000_nc(ip_filename, offset);
 	dat.trace_xy.push_back(p[0]); dat.trace_xy.push_back(p[1]);
 
 	// advect
