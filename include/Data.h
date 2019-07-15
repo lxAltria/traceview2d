@@ -15,6 +15,9 @@ class Data{
 	float bounds[2][2];
 	std::vector<float> trace_xy;
 
+	float px, py; // x and y coordinates of seed point
+
+
 	void read_nek5000_nc(const std::string &filename, size_t offset);
 
 };

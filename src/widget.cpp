@@ -87,7 +87,7 @@ void CGLWidget::paintGL()
 
 
 
-
+    float seed_offset_x = d->px/d->nu, seed_offset_y = d->py/d->nv;
 
 
 
@@ -104,8 +104,8 @@ void CGLWidget::paintGL()
             
             vx = d->u[j*d->nu+i];
             vy = d->v[j*d->nu+i];
-            x = float(i)/d->nu-0.5;
-            y = float(j)/d->nu-0.5;
+            x = float(i)/d->nu-seed_offset_x;
+            y = float(j)/d->nu-seed_offset_y;
 
             glBegin(GL_LINES);
             glVertex3f(x, y, 0);
@@ -127,8 +127,8 @@ void CGLWidget::paintGL()
    
 
     float x0, y0, x1, y1;
-    x0 = d->trace_xy[0]/d->nu-0.5;
-    y0 = d->trace_xy[1]/d->nv-0.5;
+    x0 = d->trace_xy[0]/d->nu-seed_offset_x;
+    y0 = d->trace_xy[1]/d->nv-seed_offset_y;
 
     glColor3f(0, 0.5, 0);
     glPointSize(8.0);
@@ -140,10 +140,10 @@ void CGLWidget::paintGL()
     glLineWidth(2.0);
     for (size_t i=0; i<d->trace_xy.size()-2; i+=2){
 
-        x0 = d->trace_xy[i]/d->nu-0.5;
-        y0 = d->trace_xy[i+1]/d->nv-0.5;
-        x1 = d->trace_xy[i+2]/d->nu-0.5;
-        y1 = d->trace_xy[i+3]/d->nv-0.5;
+        x0 = d->trace_xy[i]/d->nu-seed_offset_x;
+        y0 = d->trace_xy[i+1]/d->nv-seed_offset_y;
+        x1 = d->trace_xy[i+2]/d->nu-seed_offset_x;
+        y1 = d->trace_xy[i+3]/d->nv-seed_offset_y;
 
          glBegin(GL_LINES);
          glVertex3f(x0, y0, 0);
