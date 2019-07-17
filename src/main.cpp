@@ -36,7 +36,7 @@ int main(int argc, char **argv){
 	for (int i=0; i<nmax; i++){
 
 		float nx[2];
-		if (advect(dat, p, nx, step)){
+		if (advect_rk4(dat, p, nx, step)){
 			p[0] = nx[0]; p[1] = nx[1];
 			dat.trace_xy.push_back(p[0]); dat.trace_xy.push_back(p[1]);
 		}else{
