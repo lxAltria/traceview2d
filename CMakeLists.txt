@@ -21,6 +21,9 @@ find_package (OpenGL REQUIRED)
 find_package (Qt4 REQUIRED COMPONENTS QtCore QtGui QtOpenGL)
 include (${QT_USE_FILE})
 
+# EIGEN
+INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
+
 
 include_directories ("include")
 

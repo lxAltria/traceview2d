@@ -13,7 +13,10 @@ class Data{
 	size_t nu, nv;
 	float res; // assuming same resolution along all axis
 	float bounds[2][2];
+	int nmax;
+
 	std::vector<float> trace_xy;
+	std::vector<double> itrace_xy; // interactive streamline
 
 	float px, py; // x and y coordinates of seed point
 
