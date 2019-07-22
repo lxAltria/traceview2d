@@ -4,7 +4,7 @@
 
 // barycentric adapted function from :https://www.gamedev.net/forums/topic/621445-barycentric-coordinates-c-code-check/
 
-void interp2d(const Data &dat, const float p[2], float v[2]){
+void interp2d(const Data &dat, const double p[2], double v[2]){
 
 
 	// get indexes i,j of lower left corner
@@ -23,14 +23,14 @@ void interp2d(const Data &dat, const float p[2], float v[2]){
 	// barycentric coordinates lambda
 	double lambda[3];
 
-	// float pp[2] = {0,0.5};
+	// double pp[2] = {0,0.5};
 	// double p0[2] = {double(0),double(0)};
 	// double p1[2] = {double(1),double(1)};
 	// double p2[2] = {double(0), double(1)};
 	// barycent2d(p0, p1, p2, pp, lambda);
 	// fprintf(stderr, "lambda %f %f %f\n", lambda[0], lambda[1], lambda[2]);
 
-	float v00, v01, v10, v11, v20, v21;
+	double v00, v01, v10, v11, v20, v21;
 
 	if (triangle == 0){
 
@@ -111,7 +111,7 @@ double dist(double x0, double y0, double z0, double x1, double y1, double z1)
 }
 
 
-void barycent2d(double *p0, double *p1, double *p2, const float *v, double *lambda )
+void barycent2d(double *p0, double *p1, double *p2, const double *v, double *lambda )
 {
 
 	double x0 = p0[0], y0 = p0[1], z0 = 0;

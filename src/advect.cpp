@@ -2,7 +2,7 @@
 #include "interp.h"
 
 
-inline bool inside(const Data &dat, const float p[2])
+inline bool inside(const Data &dat, const double p[2])
 {
     for (int i = 0; i < 2; i++)
         if (p[i] < dat.bounds[i][0] || p[i] > dat.bounds[i][1])
@@ -11,9 +11,9 @@ inline bool inside(const Data &dat, const float p[2])
 }
 
 
-bool advect(const Data &dat ,const float p[2], float nxt[2], const double step){
+bool advect(const Data &dat ,const double p[2], double nxt[2], const double step){
 
-	float v[2];
+	double v[2];
 
 	// if inside domain advect and return true, else return false
 	if (inside(dat, p)){
@@ -35,33 +35,33 @@ bool advect(const Data &dat ,const float p[2], float nxt[2], const double step){
 }
 
 
-bool advect_rk4(const Data &dat ,const float* pt, float *Y, const double h )
+bool advect_rk4(const Data &dat ,const double* pt, double *Y, const double h )
 {
   int num_dims = 2;
 
-  float p0[num_dims]; 
-  memcpy(p0, pt, sizeof(float)*num_dims); 
+  double p0[num_dims]; 
+  memcpy(p0, pt, sizeof(double)*num_dims); 
   
-  float v[num_dims]; 
+  double v[num_dims]; 
 
   // 1st rk step
   if (!inside(dat, pt)) return false; 
   interp2d(dat, pt, v);
-  float k1[num_dims]; 
+  double k1[num_dims]; 
   for (int i=0; i<num_dims; i++) k1[i] = h*v[i]; 
   for (int i=0; i<num_dims; i++) Y[i] = p0[i] + 0.5*k1[i]; 
   
   // 2nd rk step
   if (!inside(dat, pt)) return true; 
   interp2d(dat, pt, v);
-  float k2[num_dims]; 
+  double k2[num_dims]; 
   for (int i=0; i<num_dims; i++) k2[i] = h*v[i]; 
   for (int i=0; i<num_dims; i++) Y[i] = p0[i] + 0.5*k2[i]; 
 
   // 3rd rk step
   if (!inside(dat, pt)) return true; 
   interp2d(dat, pt, v);
-  float k3[num_dims]; 
+  double k3[num_dims]; 
   for (int i=0; i<num_dims; i++) k3[i] = h*v[i]; 
   for (int i=0; i<num_dims; i++) Y[i] = p0[i] + k3[i]; 
 

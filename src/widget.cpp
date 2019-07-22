@@ -136,8 +136,8 @@ void CGLWidget::generate_seeds(double px, double py){
 
 void CGLWidget::generate_lic(){
 
-    float p[2];
-    float nx[2];
+    double p[2];
+    double nx[2];
     double lic_val;
     double  idx_x, idx_y;
     int ind_i, ind_j;
@@ -371,12 +371,12 @@ void CGLWidget::paintGL()
 void CGLWidget::compute_interavtive_streamline(double sx, double sy){
 
      d->itrace_xy.clear();
-     float p[2] = {(float)sx, (float)sy};
+     double p[2] = {sx, sy};
 
     // advect
     for (int i=0; i<d->nmax; i++){
 
-        float nx[2];
+        double nx[2];
         if (advect(*d, p, nx, step)){
             p[0] = nx[0]; p[1] = nx[1];
             d->itrace_xy.push_back(p[0]); d->itrace_xy.push_back(p[1]);
@@ -419,8 +419,8 @@ void CGLWidget::mousePressEvent(QMouseEvent* e)
 
                                                                                                                                                                                                                                                    
 
-    float x, y;
-    float seed_offset_x = d->px/d->nu, seed_offset_y = d->py/d->nv;
+    double x, y;
+    double seed_offset_x = d->px/d->nu, seed_offset_y = d->py/d->nv;
     QVector3D frnt(e->x(), e->y(), 0);
     QVector3D frnt_pt = unproject(frnt, mvmatrix, projmatrix, vp);
 

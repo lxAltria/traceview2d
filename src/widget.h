@@ -26,7 +26,7 @@ public:
   double lic_size; // half of side of lic image
   int lsize; // int version of side of lic image
   int lic_nmax; // max advection steps on each side for lic 
-  float step; // advection step size
+  double step; // advection step size
   double scx, scy; // starting corner x and y
   double lic_res; // resolution of lic image
   double rate; // determines the resolution of lic
@@ -34,7 +34,7 @@ public:
   std::vector<double> lic_x;
   std::vector<double> lic_y;
   std::vector<double> lic_vals;
-  std::vector<float> noise;
+  std::vector<double> noise;
 
   void set_lic_size(double lic_size, int lic_nmax, float step, double rate);
   void generate_seeds(double px, double py);

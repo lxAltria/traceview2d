@@ -20,9 +20,9 @@ int main(int argc, char **argv){
 
 	// initialize 
 	Data dat;
-	float p[2];
+	double p[2];
 	int nmax=100;
-	float step = 0.1;
+	double step = 0.1;
 	size_t offset = 22;
 	double lic_size = 150.0, rate=1;
 	int lic_nmax = 50;
@@ -38,7 +38,7 @@ int main(int argc, char **argv){
 	// advect
 	for (int i=0; i<nmax; i++){
 
-		float nx[2];
+		double nx[2];
 		if (advect(dat, p, nx, step)){
 			p[0] = nx[0]; p[1] = nx[1];
 			dat.trace_xy.push_back(p[0]); dat.trace_xy.push_back(p[1]);
