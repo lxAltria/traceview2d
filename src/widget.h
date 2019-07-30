@@ -8,6 +8,9 @@
 #include <QMouseEvent>
 #include "trackball.h"
 #include "Data.h"
+#include <QVector2D>
+
+class QGLShaderProgram;
 
 class CGLWidget : public QGLWidget {
   Q_OBJECT
@@ -30,6 +33,7 @@ public:
   double scx, scy; // starting corner x and y
   double lic_res; // resolution of lic image
   double rate; // determines the resolution of lic
+  bool licEnabled = false;
 
   std::vector<double> lic_x;
   std::vector<double> lic_y;
@@ -61,6 +65,8 @@ protected:
   // void keyPressEvent(QKeyEvent*); 
   void wheelEvent(QWheelEvent*); 
 
+  void load_texture();
+
 private:
   CGLTrackball trackball;
   QMatrix4x4 projmatrix, mvmatrix; 
@@ -70,11 +76,23 @@ private:
 
   float seed_offset_x, seed_offset_y;
 
+  GLuint texture;
+  QVector<QVector3D> vertices;
+  QVector<QVector2D> texCoords;
+
+  QGLShaderProgram *program;
+
+  float value=1;
+  float xval, yval;
+  float xoffset = 0, yoffset = 0;
 protected:
   
   
   GLUquadricObj *sphere = NULL;
   GLuint texEarth = 0;
+
+  GLuint tex;
+
 
 
 

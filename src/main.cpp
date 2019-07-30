@@ -48,16 +48,24 @@ int main(int argc, char **argv){
 
 	}
 
-
+	
 	// vis
 	QApplication app(argc, argv);
-    QGLFormat fmt = QGLFormat::defaultFormat();
-    fmt.setSampleBuffers(true);
-    fmt.setSamples(16); 
-    QGLFormat::setDefaultFormat(fmt); 
 
+ //    QGLFormat fmt = QGLFormat::defaultFormat();
+ //    fmt.setSampleBuffers(true);
+ //    fmt.setSamples(16); 
+ //    QGLFormat::setDefaultFormat(fmt); 
 
-    CGLWidget *widget = new CGLWidget();
+    QGLFormat fmt;
+	fmt.setProfile( QGLFormat::CoreProfile ); // Requires >=Qt-4.8.0
+	fmt.setSampleBuffers( true );
+	fmt.setVersion(3,1);
+	qDebug() << "OpenGL Versions Supported: " << QGLFormat::openGLVersionFlags();
+
+    CGLWidget *widget = new CGLWidget(fmt);
+
+    widget->resize(400, 400);
 	widget->d = &dat;
 
 	

@@ -16,7 +16,7 @@ include_directories (${NETCDF_INCLUDE_DIR})
 find_package (GLEW REQUIRED)
 include_directories (${GLEW_INCLUDE_DIR})
 
-find_package (OpenGL REQUIRED)
+find_package (OpenGL 3.1 REQUIRED)
 
 find_package (Qt4 REQUIRED COMPONENTS QtCore QtGui QtOpenGL)
 include (${QT_USE_FILE})

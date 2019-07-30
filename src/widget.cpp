@@ -13,6 +13,10 @@
 #include "advect.h"
 
 #include <Eigen/Dense>
+
+#include <QGLShaderProgram>
+#include <QPixmap>
+
 using namespace Eigen;
 
 
@@ -27,6 +31,8 @@ eye(0, 0, 2.5), center(0, 0, 0), up(0, 1, 0)
 CGLWidget::~CGLWidget()
 {
 }
+
+
 
 
 
@@ -46,6 +52,23 @@ void CGLWidget::initializeGL()
     glPolygonOffset(1, 1);
     
     glEnable(GL_DEPTH_TEST);
+     // glEnable(GL_CULL_FACE);
+     // glEnable(GL_TEXTURE_2D);
+
+    const unsigned char* glVer = glGetString(GL_VERSION);
+    std::cout << glVer << endl; 
+
+
+
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    
 
     CHECK_GLERROR();
 }
@@ -91,9 +114,6 @@ void CGLWidget::set_lic_size(double lic_size, int lic_nmax, float step, double r
     this->rate = rate;
 
     
-   
-
-
 }
 
 
@@ -103,11 +123,11 @@ void CGLWidget::generate_seeds(double px, double py){
   
 
 
-
     double step = rate/scale;
     this->lsize = 0;
-    for (double i=px-lic_size/scale; i<px+lic_size/scale; i+=step){
-        for (double j=py-lic_size/scale; j<py+lic_size/scale; j+=step){
+
+    for (double i=px-lic_size/scale; i<px+lic_size/scale-10e-12; i+=step){
+        for (double j=py-lic_size/scale; j<py+lic_size/scale-10e-12; j+=step){
             lic_x.push_back(i);
             lic_y.push_back(j);
         }
@@ -119,6 +139,8 @@ void CGLWidget::generate_seeds(double px, double py){
     lic_vals.resize(lic_x.size());
     // fprintf(stderr, "lic_x %ld %d\n", lic_x.size(), lsize);
     // fprintf(stderr, "Checking assertion lic_x %ld %d\n", lic_x.size(), lsize);
+
+    
     assert(lsize*lsize==lic_x.size());
 
     /* Generate noise image */
@@ -222,11 +244,15 @@ void CGLWidget::generate_lic(){
 
 void CGLWidget::paintGL()
 {
+
+
     glClearColor(1, 1, 1, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    
     projmatrix.setToIdentity();
-    projmatrix.perspective(fovy, (float)width()/height(), znear, zfar);
+    // projmatrix.perspective(fovy, (float)width()/height(), znear, zfar);
+    projmatrix.ortho(-0.5, 0.5, -0.5, 0.5, znear, zfar);
     mvmatrix.setToIdentity();
     mvmatrix.lookAt(eye, center, up);
     mvmatrix.rotate(trackball.getRotation());
@@ -239,45 +265,87 @@ void CGLWidget::paintGL()
     glLoadIdentity();
     glLoadMatrixd(mvmatrix.data());
 
-    // Import the viewPort
-      GLint *params = new GLint(4);
-      glGetIntegerv(GL_VIEWPORT, params);
-      QRect vp = QRect(*params, *(params + 1), *(params + 2), *(params + 3));  
+    // // Import the viewPort
+    //   GLint *params = new GLint(4);
+    //   glGetIntegerv(GL_VIEWPORT, params);
+    //   QRect vp = QRect(*params, *(params + 1), *(params + 2), *(params + 3));  
 
 
     glColor3f(0, 0, 0);
     glPointSize(1.0);
 
-                                                                                                                                                                                                                                                   
+
+
+                                                                                                                                                                                                                                  
 
     float x, y;
     seed_offset_x = d->px/d->nu;
     seed_offset_y = d->py/d->nv;
 
-    QVector3D vec(400,200,1);
-    QVector3D tmp = unproject(vec, mvmatrix, projmatrix, vp);
+    // QVector3D vec(400,200,1);
+    // QVector3D tmp = unproject(vec, mvmatrix, projmatrix, vp);
     // fprintf(stderr, "%f %f %f, %f %f\n", tmp.x(), tmp.y(), tmp.z(), znear, zfar);
     // fprintf(stderr, "%d %d\n", width(), height());
 
      /* drawing lic */
-    // fprintf(stderr, "len %ld\n", lic_x.size());
-    glColor3f(1, 0, 0);
-    glPointSize(1.0);
-    float colr;
-    int ind_i, ind_j;
-    for (size_t i=0; i<lic_x.size(); i++){
-        // ind_i = i/lsize;
-        // ind_j = i%lsize;
-        // colr = noise[ind_i*lsize + ind_j];
-        colr = lic_vals[i];
-        glColor3f(colr, colr, colr);
-        // fprintf(stderr, "colr %f\n", colr);
-        x = (float)lic_x[i]/d->nu - seed_offset_x;
-        y = (float)lic_y[i]/d->nv - seed_offset_y;
-        glBegin(GL_POINTS);
-        glVertex3f(x,y,0);
+    // glColor3f(1, 0, 0);
+    // glPointSize(1.0);
+    // float colr;
+    // int ind_i, ind_j;
+    // for (size_t i=0; i<lic_x.size(); i++){
+    //     // ind_i = i/lsize;
+    //     // ind_j = i%lsize;
+    //     // colr = noise[ind_i*lsize + ind_j];
+    //     colr = lic_vals[i];
+    //     glColor3f(colr, colr, colr);
+    //     // fprintf(stderr, "colr %f\n", colr);
+    //     x = (float)lic_x[i]/d->nu - seed_offset_x;
+    //     y = (float)lic_y[i]/d->nv - seed_offset_y;
+    //     glBegin(GL_POINTS);
+    //     glVertex3f(x,y,0);
+    //     glEnd();
+    // }
+
+    /* Texture */
+    // if (licEnabled == true){
+        float scale = trackball.getScale();
+        glPushMatrix();
+      // glColor4f(1, 1, 1, 1);
+        // glScalef(scale, scale, scale);
+        glRotatef(-90, 0, 0, 1);
+      // glTranslatef(-0.5f, -0.5f, 0.f);
+
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glEnable(GL_TEXTURE_2D);
+        glBegin(GL_QUADS);
+
+        // glVertex2f(-lic_size/d->nu/scale, -lic_size/d->nv/scale); glTexCoord2f(0, 0);
+        // glVertex2f(lic_size/d->nu/scale, -lic_size/d->nv/scale); glTexCoord2f(1, 0);
+        // glVertex2f(lic_size/d->nu/scale, lic_size/d->nv/scale); glTexCoord2f(1, 1);
+        // glVertex2f(-lic_size/d->nu/scale, lic_size/d->nv/scale); glTexCoord2f(0, 1);
+
+        glVertex2f(-xval, -yval); glTexCoord2f(0, 0);
+        glVertex2f(xval, -yval); glTexCoord2f(1, 0);
+        glVertex2f(xval, yval); glTexCoord2f(1, 1);
+        glVertex2f(-xval, yval); glTexCoord2f(0, 1);
+
+
+        // glVertex2f(-seed_offset_x-lic_size/d->nu, -seed_offset_y-lic_size/d->nv); glTexCoord2f(0, 0);
+        // glVertex2f(seed_offset_x+lic_size/d->nu, -seed_offset_y-lic_size/d->nv); glTexCoord2f(1, 0);
+        // glVertex2f(seed_offset_x+lic_size/d->nu, seed_offset_y+lic_size/d->nv); glTexCoord2f(1, 1);
+        // glVertex2f(-seed_offset_x-lic_size/d->nu, seed_offset_y+lic_size/d->nv); glTexCoord2f(0, 1);
+
+        // glVertex2f(-scx, -scy); glTexCoord2f(0, 0);
+        // glVertex2f(scx, -scy); glTexCoord2f(1, 0);
+        // glVertex2f(scx, scy); glTexCoord2f(1, 1);
+        // glVertex2f(-scx, scy); glTexCoord2f(0, 1);
+
         glEnd();
-    }
+        glDisable(GL_TEXTURE_2D);
+        glPopMatrix();
+    // }
+
+    /* Texture ends */
 
     /* drawing vector field */
 
@@ -319,7 +387,7 @@ void CGLWidget::paintGL()
     glColor3f(0, 0.5, 0);
     glPointSize(8.0);
     glBegin(GL_POINTS);
-    glVertex3f(x0,y0,0);
+    glVertex3f(x0,y0,0.001);
     glEnd();
 
     glColor3f(1, 0, 0);
@@ -346,7 +414,7 @@ void CGLWidget::paintGL()
         glColor3f(0, 0.5, 0);
         glPointSize(8.0);
         glBegin(GL_POINTS);
-        glVertex3f(x0,y0,0);
+        glVertex3f(x0,y0,0.001);
         glEnd();
 
         glColor3f(1, 0, 0);
@@ -372,7 +440,7 @@ void CGLWidget::compute_interavtive_streamline(double sx, double sy){
 
      d->itrace_xy.clear();
      double p[2] = {sx, sy};
-
+     d->itrace_xy.push_back(p[0]); d->itrace_xy.push_back(p[1]);
     // advect
     for (int i=0; i<d->nmax; i++){
 
@@ -394,12 +462,12 @@ void CGLWidget::mousePressEvent(QMouseEvent* e)
     trackball.mouse_rotate(e->x(), e->y());
 
 
-    projmatrix.setToIdentity();
-    projmatrix.perspective(fovy, (float)width()/height(), znear, zfar);
-    mvmatrix.setToIdentity();
-    mvmatrix.lookAt(eye, center, up);
-    mvmatrix.rotate(trackball.getRotation());
-    mvmatrix.scale(trackball.getScale());
+    // projmatrix.setToIdentity();
+    // projmatrix.perspective(fovy, (float)width()/height(), znear, zfar);
+    // mvmatrix.setToIdentity();
+    // mvmatrix.lookAt(eye, center, up);
+    // mvmatrix.rotate(trackball.getRotation());
+    // mvmatrix.scale(trackball.getScale());
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -417,7 +485,11 @@ void CGLWidget::mousePressEvent(QMouseEvent* e)
     glColor3f(0, 0, 0);
     glPointSize(1.0);
 
-                                                                                                                                                                                                                                                   
+    double wx  = (e->x() - width()/double(2))/width()/trackball.getScale(), wy = (height()/double(2) - e->y())/height()/trackball.getScale();
+
+    double nsx = wx*(d->nu) + d->px , nsy = wy*(d->nv)+ d->py;
+
+    fprintf(stderr, "pos %f %f, %f %f\n", wx, wy, nsx, nsy);                                                                                                                                                                                                                                               
 
     double x, y;
     double seed_offset_x = d->px/d->nu, seed_offset_y = d->py/d->nv;
@@ -437,14 +509,14 @@ void CGLWidget::mousePressEvent(QMouseEvent* e)
     double sx = (d->nu)*(sd(0)+seed_offset_x);
     double sy = (d->nv)*(-sd(1)+seed_offset_y);
 
-    compute_interavtive_streamline(sx, sy);
+    compute_interavtive_streamline(nsx, nsy);
     updateGL();
 
 }
 
 void CGLWidget::mouseMoveEvent(QMouseEvent* e)
 {
-    trackball.motion_rotate(e->x(), e->y());
+    // trackball.motion_rotate(e->x(), e->y());
     updateGL();
 }
 
@@ -463,10 +535,54 @@ void CGLWidget::keyPressEvent(QKeyEvent *ev)
 
     if (ev->text().toStdString().c_str()[0]=='s'){
 
+        xval = lic_size/d->nu/trackball.getScale();
+        yval = lic_size/d->nv/trackball.getScale();
+
         generate_seeds(d->px, d->py);
         generate_lic();
+        load_texture();
         updateGL();
+        licEnabled = true;
+
+        
     }
 }
 
 
+
+int ctr=0;
+void CGLWidget::load_texture(){
+
+    value = 1/trackball.getScale();
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    // Black/white checkerboard
+    // float pixels[] = {
+    //     0.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f,
+    //     0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f
+    // };
+
+    // float pixels[] = {
+    //     0.0f, 1.0f,
+    //     1.0f, 0.0f
+    // };
+
+
+    float pixels[lsize*lsize];
+    for (size_t i=0; i<lsize; i++){
+        for (int j=0; j<lsize; j++){
+            pixels[j*lsize + i ] = float(lic_vals[i*lsize + j]);
+        }
+    }
+
+
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 2, 2, 0, GL_LUMINANCE, GL_FLOAT, pixels);
+      // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, lsize, lzise, 0, GL_RGB, GL_FLOAT, rgb.data());
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, lsize, lsize, 0, GL_LUMINANCE, GL_FLOAT, pixels);
+
+   
+  
+    CHECK_GLERROR();
+
+}
