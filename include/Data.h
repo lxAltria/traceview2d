@@ -18,7 +18,7 @@ class Data{
 	std::vector<float> trace_xy;
 	std::vector<double> itrace_xy; // interactive streamline
 
-	float px, py; // x and y coordinates of seed point
+	double px, py; // x and y coordinates of seed point
 
 
 	void read_nek5000_nc(const std::string &filename, size_t offset);

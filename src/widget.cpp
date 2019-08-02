@@ -55,8 +55,8 @@ void CGLWidget::initializeGL()
      // glEnable(GL_CULL_FACE);
      // glEnable(GL_TEXTURE_2D);
 
-    const unsigned char* glVer = glGetString(GL_VERSION);
-    std::cout << glVer << endl; 
+    // const unsigned char* glVer = glGetString(GL_VERSION);
+    // std::cout << glVer << endl; 
 
 
 
@@ -67,6 +67,10 @@ void CGLWidget::initializeGL()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+
+    seed_offset_x = d->px/d->nu;
+    seed_offset_y = d->py/d->nv;
 
     
 
@@ -121,8 +125,6 @@ void CGLWidget::set_lic_size(double lic_size, int lic_nmax, float step, double r
 void CGLWidget::generate_seeds(double px, double py){
     double scale = trackball.getScale();
   
-
-
     double step = rate/scale;
     this->lsize = 0;
 
@@ -153,6 +155,8 @@ void CGLWidget::generate_seeds(double px, double py){
 
         }
     }
+
+     // fprintf(stderr, "top left: (%f %f), bottom right: (%f %f)\n", px-lic_size/scale, py-lic_size/scale, px-lic_size/scale + step*lsize, py-lic_size/scale + step*lsize);
 
 }
 
@@ -252,7 +256,8 @@ void CGLWidget::paintGL()
     
     projmatrix.setToIdentity();
     // projmatrix.perspective(fovy, (float)width()/height(), znear, zfar);
-    projmatrix.ortho(-0.5, 0.5, -0.5, 0.5, znear, zfar);
+    // projmatrix.ortho(-0.5, 0.5, -0.5, 0.5, znear, zfar);
+    projmatrix.ortho(-0.5, 0.5, -float(height())/width()/2.0, float(height())/width()/2.0, znear, zfar);
     mvmatrix.setToIdentity();
     mvmatrix.lookAt(eye, center, up);
     mvmatrix.rotate(trackball.getRotation());
@@ -279,8 +284,8 @@ void CGLWidget::paintGL()
                                                                                                                                                                                                                                   
 
     float x, y;
-    seed_offset_x = d->px/d->nu;
-    seed_offset_y = d->py/d->nv;
+    // seed_offset_x = d->px/d->nu;
+    // seed_offset_y = d->py/d->nv;
 
     // QVector3D vec(400,200,1);
     // QVector3D tmp = unproject(vec, mvmatrix, projmatrix, vp);
@@ -307,7 +312,7 @@ void CGLWidget::paintGL()
     // }
 
     /* Texture */
-    // if (licEnabled == true){
+    if (licEnabled == true){
         float scale = trackball.getScale();
         glPushMatrix();
       // glColor4f(1, 1, 1, 1);
@@ -343,7 +348,7 @@ void CGLWidget::paintGL()
         glEnd();
         glDisable(GL_TEXTURE_2D);
         glPopMatrix();
-    // }
+    }
 
     /* Texture ends */
 
@@ -459,7 +464,7 @@ void CGLWidget::compute_interavtive_streamline(double sx, double sy){
 
 void CGLWidget::mousePressEvent(QMouseEvent* e)
 {
-    trackball.mouse_rotate(e->x(), e->y());
+    // trackball.mouse_rotate(e->x(), e->y());
 
 
     // projmatrix.setToIdentity();
@@ -469,47 +474,65 @@ void CGLWidget::mousePressEvent(QMouseEvent* e)
     // mvmatrix.rotate(trackball.getRotation());
     // mvmatrix.scale(trackball.getScale());
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glLoadMatrixd(projmatrix.data());
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glLoadMatrixd(mvmatrix.data());
 
-    // Import the viewPort
-      GLint *params = new GLint(4);
-      glGetIntegerv(GL_VIEWPORT, params);
-      QRect vp = QRect(*params, *(params + 1), *(params + 2), *(params + 3));  
+     double wx  = (e->x() - width()/double(2))/width()/trackball.getScale(), wy = (height()/double(2) - e->y())/height()/trackball.getScale();
+
+        // double nsx = wx*(d->nu) + d->px , nsy = wy*(d->nv)+ d->py;
+        double nsx = wx*(d->nu) + seed_offset_x*d->nu , nsy = wy*(d->nv)+ seed_offset_y*d->nv;
 
 
-    glColor3f(0, 0, 0);
-    glPointSize(1.0);
+     if(e->modifiers() && Qt::ShiftModifier){
+         fprintf(stderr, "shift\n");  
+          double wx  = (e->x() - width()/double(2))/width()/trackball.getScale(); // screen norm offset scaled
+          double wy =  (height()/double(2) - e->y())/height()/trackball.getScale();
 
-    double wx  = (e->x() - width()/double(2))/width()/trackball.getScale(), wy = (height()/double(2) - e->y())/height()/trackball.getScale();
 
-    double nsx = wx*(d->nu) + d->px , nsy = wy*(d->nv)+ d->py;
+        seed_offset_x = seed_offset_x + wx; // obj norm offset
+        seed_offset_y = seed_offset_y + wy;
+        d->px = nsx; d->py = nsy;
+        licEnabled = false;
 
-    fprintf(stderr, "pos %f %f, %f %f\n", wx, wy, nsx, nsy);                                                                                                                                                                                                                                               
+    }else{
 
-    double x, y;
-    double seed_offset_x = d->px/d->nu, seed_offset_y = d->py/d->nv;
-    QVector3D frnt(e->x(), e->y(), 0);
-    QVector3D frnt_pt = unproject(frnt, mvmatrix, projmatrix, vp);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glLoadMatrixd(projmatrix.data());
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glLoadMatrixd(mvmatrix.data());
 
-    QVector3D back(e->x(), e->y(), 1);
-    QVector3D back_pt = unproject(back, mvmatrix, projmatrix, vp);
+        // // Import the viewPort
+        //   GLint *params = new GLint(4);
+        //   glGetIntegerv(GL_VIEWPORT, params);
+        //   QRect vp = QRect(*params, *(params + 1), *(params + 2), *(params + 3));  
 
-    Vector3d dir(back_pt.x() - frnt_pt.x(), back_pt.y() - frnt_pt.y(), back_pt.z() -frnt_pt.z());
-    double magratio = frnt_pt.z()/abs((frnt_pt.z() - back_pt.z()));
-    double mag = dir.norm();
-    dir.normalize();
 
-    Vector3d sd = magratio*mag*dir + Vector3d(frnt_pt.x(), frnt_pt.y(), frnt_pt.z());
-   
-    double sx = (d->nu)*(sd(0)+seed_offset_x);
-    double sy = (d->nv)*(-sd(1)+seed_offset_y);
+        fprintf(stderr, "pos %f %f, %f %f\n", wx, wy, nsx, nsy);                                                                                                                                                                                                                                               
 
-    compute_interavtive_streamline(nsx, nsy);
+        // double x, y;
+        // // double seed_offset_x = d->px/d->nu, seed_offset_y = d->py/d->nv;
+        // QVector3D frnt(e->x(), e->y(), 0);
+        // QVector3D frnt_pt = unproject(frnt, mvmatrix, projmatrix, vp);
+
+        // QVector3D back(e->x(), e->y(), 1);
+        // QVector3D back_pt = unproject(back, mvmatrix, projmatrix, vp);
+
+        // Vector3d dir(back_pt.x() - frnt_pt.x(), back_pt.y() - frnt_pt.y(), back_pt.z() -frnt_pt.z());
+        // double magratio = frnt_pt.z()/abs((frnt_pt.z() - back_pt.z()));
+        // double mag = dir.norm();
+        // dir.normalize();
+
+        // Vector3d sd = magratio*mag*dir + Vector3d(frnt_pt.x(), frnt_pt.y(), frnt_pt.z());
+       
+        // double sx = (d->nu)*(sd(0)+seed_offset_x);
+        // double sy = (d->nv)*(-sd(1)+seed_offset_y);
+
+
+    
+
+        compute_interavtive_streamline(nsx, nsy);
+
+    }
     updateGL();
 
 }
@@ -537,6 +560,7 @@ void CGLWidget::keyPressEvent(QKeyEvent *ev)
 
         xval = lic_size/d->nu/trackball.getScale();
         yval = lic_size/d->nv/trackball.getScale();
+
 
         generate_seeds(d->px, d->py);
         generate_lic();
