@@ -7,11 +7,11 @@ Instruction for interactive streamline: Click on any location on plane to draw a
 
 For recentering about any point, use "Shift+mouse click"
 
-To clear currently rendered streamlines, press 's'.
+To clear currently rendered streamlines, press 'c'.
 
-To store current view parameters into "timestamp.txt" file, press 'p'.
+To store current view parameters into "%timestamp%.txt" file, press 'p'.
 
-To store a snapshop of the render window, press 'i'.
+To store a snapshop of the render window "%timestamp%.png", press 'i'.
 
 Command line arguments:
 ./main filepath offset seed_x seed_y nmax step lic_size lic_nmax rate [-v view_filename] 
