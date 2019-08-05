@@ -34,6 +34,8 @@ public:
   double lic_res; // resolution of lic image
   double rate; // determines the resolution of lic
   bool licEnabled = false;
+  double vvals[6]; // scene values from file
+  float licScale = 1.0; // store the scale at which latest lic is generated 
 
   std::vector<double> lic_x;
   std::vector<double> lic_y;
@@ -46,7 +48,9 @@ public:
   void keyPressEvent(QKeyEvent *ev);
 
   // streamline related
-  void compute_interavtive_streamline(double sx, double sy);
+  void compute_interavtive_streamline(double sx, double sy, int direction_factor); // direction
+
+  void init(std::string view_filename);
 
 //  inline void transformPoint(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
 //  inline GLint project(GLdouble objx, GLdouble objy, GLdouble objz,
@@ -66,6 +70,7 @@ protected:
   void wheelEvent(QWheelEvent*); 
 
   void load_texture();
+
 
 private:
   CGLTrackball trackball;

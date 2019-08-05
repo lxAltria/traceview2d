@@ -18,6 +18,8 @@ class Data{
 	std::vector<float> trace_xy;
 	std::vector<double> itrace_xy; // interactive streamline
 
+	std::vector<std::vector<double>> itraces_xy; // to support multiple seed points
+
 	double px, py; // x and y coordinates of seed point
 
 

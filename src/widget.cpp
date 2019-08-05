@@ -19,6 +19,9 @@
 
 using namespace Eigen;
 
+#include <fstream>
+#include <iostream>
+#include <ctime>
 
 
 CGLWidget::CGLWidget(const QGLFormat& fmt) : 
@@ -32,16 +35,46 @@ CGLWidget::~CGLWidget()
 {
 }
 
+void CGLWidget::init(std::string view_filename){
 
+     // reset trace xy if view filename exists
+    // set trackball rotation, trackball scale, d->px, d->py, seed_offset_x, seed_offset_y
 
+    trackball.init();
 
+    std::string line;
+    
+    std::ifstream myfile (view_filename.c_str());
+    int ctr = 0;
+    if (myfile.is_open())
+    {
+        while ( getline (myfile,line) )
+        {
+            vvals[ctr++] = std::stod(line);
+            // std::cout << vvals[ctr-1]<< '\n';
+        }
+      myfile.close();
 
+      d->px = vvals[0];
+      d->py = vvals[1];
+      seed_offset_x = vvals[2];
+      seed_offset_y = vvals[3];
+      
+      d->trace_xy.clear();
+      d->trace_xy.push_back(d->px); d->trace_xy.push_back(d->py);
+
+  }
+  else {fprintf(stderr, "Unable to open view file. Showing default view.\n"); }
+
+  
+
+}
 
 void CGLWidget::initializeGL()
 {
     glewInit();
 
-    trackball.init();
+    // trackball.init();
 
     sphere = gluNewQuadric();
     gluQuadricDrawStyle(sphere, GLU_FILL);
@@ -71,6 +104,14 @@ void CGLWidget::initializeGL()
 
     seed_offset_x = d->px/d->nu;
     seed_offset_y = d->py/d->nv;
+
+    // trackball.setScale(vvals[4]);
+    // // generate lic 
+    // generate_seeds(d->px, d->py);
+    // generate_lic();
+    // load_texture();
+    // trackball.setScale(vvals[5]);
+    // licEnabled = true;
 
     
 
@@ -252,8 +293,9 @@ void CGLWidget::paintGL()
 
     glClearColor(1, 1, 1, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+        
     projmatrix.setToIdentity();
     // projmatrix.perspective(fovy, (float)width()/height(), znear, zfar);
     // projmatrix.ortho(-0.5, 0.5, -0.5, 0.5, znear, zfar);
@@ -270,46 +312,17 @@ void CGLWidget::paintGL()
     glLoadIdentity();
     glLoadMatrixd(mvmatrix.data());
 
-    // // Import the viewPort
-    //   GLint *params = new GLint(4);
-    //   glGetIntegerv(GL_VIEWPORT, params);
-    //   QRect vp = QRect(*params, *(params + 1), *(params + 2), *(params + 3));  
+
 
 
     glColor3f(0, 0, 0);
     glPointSize(1.0);
 
 
-
                                                                                                                                                                                                                                   
 
     float x, y;
-    // seed_offset_x = d->px/d->nu;
-    // seed_offset_y = d->py/d->nv;
 
-    // QVector3D vec(400,200,1);
-    // QVector3D tmp = unproject(vec, mvmatrix, projmatrix, vp);
-    // fprintf(stderr, "%f %f %f, %f %f\n", tmp.x(), tmp.y(), tmp.z(), znear, zfar);
-    // fprintf(stderr, "%d %d\n", width(), height());
-
-     /* drawing lic */
-    // glColor3f(1, 0, 0);
-    // glPointSize(1.0);
-    // float colr;
-    // int ind_i, ind_j;
-    // for (size_t i=0; i<lic_x.size(); i++){
-    //     // ind_i = i/lsize;
-    //     // ind_j = i%lsize;
-    //     // colr = noise[ind_i*lsize + ind_j];
-    //     colr = lic_vals[i];
-    //     glColor3f(colr, colr, colr);
-    //     // fprintf(stderr, "colr %f\n", colr);
-    //     x = (float)lic_x[i]/d->nu - seed_offset_x;
-    //     y = (float)lic_y[i]/d->nv - seed_offset_y;
-    //     glBegin(GL_POINTS);
-    //     glVertex3f(x,y,0);
-    //     glEnd();
-    // }
 
     /* Texture */
     if (licEnabled == true){
@@ -324,10 +337,7 @@ void CGLWidget::paintGL()
         glEnable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);
 
-        // glVertex2f(-lic_size/d->nu/scale, -lic_size/d->nv/scale); glTexCoord2f(0, 0);
-        // glVertex2f(lic_size/d->nu/scale, -lic_size/d->nv/scale); glTexCoord2f(1, 0);
-        // glVertex2f(lic_size/d->nu/scale, lic_size/d->nv/scale); glTexCoord2f(1, 1);
-        // glVertex2f(-lic_size/d->nu/scale, lic_size/d->nv/scale); glTexCoord2f(0, 1);
+
 
         glVertex2f(-xval, -yval); glTexCoord2f(0, 0);
         glVertex2f(xval, -yval); glTexCoord2f(1, 0);
@@ -335,15 +345,6 @@ void CGLWidget::paintGL()
         glVertex2f(-xval, yval); glTexCoord2f(0, 1);
 
 
-        // glVertex2f(-seed_offset_x-lic_size/d->nu, -seed_offset_y-lic_size/d->nv); glTexCoord2f(0, 0);
-        // glVertex2f(seed_offset_x+lic_size/d->nu, -seed_offset_y-lic_size/d->nv); glTexCoord2f(1, 0);
-        // glVertex2f(seed_offset_x+lic_size/d->nu, seed_offset_y+lic_size/d->nv); glTexCoord2f(1, 1);
-        // glVertex2f(-seed_offset_x-lic_size/d->nu, seed_offset_y+lic_size/d->nv); glTexCoord2f(0, 1);
-
-        // glVertex2f(-scx, -scy); glTexCoord2f(0, 0);
-        // glVertex2f(scx, -scy); glTexCoord2f(1, 0);
-        // glVertex2f(scx, scy); glTexCoord2f(1, 1);
-        // glVertex2f(-scx, scy); glTexCoord2f(0, 1);
 
         glEnd();
         glDisable(GL_TEXTURE_2D);
@@ -373,11 +374,11 @@ void CGLWidget::paintGL()
             glBegin(GL_LINES);
             glVertex3f(x, y, 0);
             // fprintf(stderr, "%f %f \n", x, y);
-            glVertex3f(x + alpha*vx, y + alpha*vy, 0.001);
+            glVertex3f(x + alpha*vx, y + alpha*vy, 0.0);
             glEnd();
 
             glBegin(GL_POINTS);
-            glVertex3f(x,y,0.001);
+            glVertex3f(x,y,0.0);
             glEnd();
 
         }
@@ -389,10 +390,10 @@ void CGLWidget::paintGL()
     x0 = d->trace_xy[0]/d->nu-seed_offset_x;
     y0 = d->trace_xy[1]/d->nv-seed_offset_y;
 
-    glColor3f(0, 0.5, 0);
+    glColor3f(0, 0, 1.0);
     glPointSize(8.0);
     glBegin(GL_POINTS);
-    glVertex3f(x0,y0,0.001);
+    glVertex3f(x0,y0,0.0);
     glEnd();
 
     glColor3f(1, 0, 0);
@@ -405,61 +406,96 @@ void CGLWidget::paintGL()
         y1 = d->trace_xy[i+3]/d->nv-seed_offset_y;
 
          glBegin(GL_LINES);
-         glVertex3f(x0, y0, 0.001);
-         glVertex3f(x1, y1, 0.001);
+         glVertex3f(x0, y0, 0.0);
+         glVertex3f(x1, y1, 0.0);
          glEnd();
     }
 
     /* drawing interactive streamline  */
 
-    if (d->itrace_xy.size()>0){
-        x0 = d->itrace_xy[0]/d->nu-seed_offset_x;
-        y0 = d->itrace_xy[1]/d->nv-seed_offset_y;
+    // if (d->itrace_xy.size()>0){
+    //     x0 = d->itrace_xy[0]/d->nu-seed_offset_x;
+    //     y0 = d->itrace_xy[1]/d->nv-seed_offset_y;
 
-        glColor3f(0, 0.5, 0);
-        glPointSize(8.0);
-        glBegin(GL_POINTS);
-        glVertex3f(x0,y0,0.001);
-        glEnd();
+    //     glColor3f(0, 0.5, 0);
+    //     glPointSize(8.0);
+    //     glBegin(GL_POINTS);
+    //     glVertex3f(x0,y0,0.001);
+    //     glEnd();
 
-        glColor3f(1, 0, 0);
-        glLineWidth(2.0);
-        for (size_t i=0; i<d->itrace_xy.size()-2; i+=2){
+    //     glColor3f(1, 0, 0);
+    //     glLineWidth(2.0);
+    //     for (size_t i=0; i<d->itrace_xy.size()-2; i+=2){
 
-            x0 = d->itrace_xy[i]/d->nu-seed_offset_x;
-            y0 = d->itrace_xy[i+1]/d->nv-seed_offset_y;
-            x1 = d->itrace_xy[i+2]/d->nu-seed_offset_x;
-            y1 = d->itrace_xy[i+3]/d->nv-seed_offset_y;
+    //         x0 = d->itrace_xy[i]/d->nu-seed_offset_x;
+    //         y0 = d->itrace_xy[i+1]/d->nv-seed_offset_y;
+    //         x1 = d->itrace_xy[i+2]/d->nu-seed_offset_x;
+    //         y1 = d->itrace_xy[i+3]/d->nv-seed_offset_y;
 
-             glBegin(GL_LINES);
-             glVertex3f(x0, y0, 0.001);
-             glVertex3f(x1, y1, 0.001);
-             glEnd();
+    //          glBegin(GL_LINES);
+    //          glVertex3f(x0, y0, 0.001);
+    //          glVertex3f(x1, y1, 0.001);
+    //          glEnd();
+    //     }
+    // }
+
+    if (d->itraces_xy.size()>0){
+
+        for (size_t h=0; h<d->itraces_xy.size(); h++){
+            x0 = d->itraces_xy[h][0]/d->nu-seed_offset_x;
+            y0 = d->itraces_xy[h][1]/d->nv-seed_offset_y;
+
+            glColor3f(0, 0.5, 0);
+            glPointSize(8.0);
+            glBegin(GL_POINTS);
+            glVertex3f(x0,y0,0.0);
+            glEnd();
+
+            glColor3f(1, 0, 0);
+            glLineWidth(2.0);
+            for (size_t i=0; i<d->itraces_xy[h].size()-2; i+=2){
+
+                x0 = d->itraces_xy[h][i]/d->nu-seed_offset_x;
+                y0 = d->itraces_xy[h][i+1]/d->nv-seed_offset_y;
+                x1 = d->itraces_xy[h][i+2]/d->nu-seed_offset_x;
+                y1 = d->itraces_xy[h][i+3]/d->nv-seed_offset_y;
+
+                glBegin(GL_LINES);
+                glVertex3f(x0, y0, 0.0);
+                glVertex3f(x1, y1, 0.0);
+                glEnd();
+            }
         }
     }
 
     CHECK_GLERROR();
 }
 
-void CGLWidget::compute_interavtive_streamline(double sx, double sy){
+void CGLWidget::compute_interavtive_streamline(double sx, double sy, int direction){
 
-     d->itrace_xy.clear();
+     // d->itrace_xy.clear();
+
+     std::vector<double> itrace_xy;
      double p[2] = {sx, sy};
-     d->itrace_xy.push_back(p[0]); d->itrace_xy.push_back(p[1]);
+     itrace_xy.push_back(p[0]); itrace_xy.push_back(p[1]);
     // advect
     for (int i=0; i<d->nmax; i++){
 
         double nx[2];
-        if (advect(*d, p, nx, step)){
+        if (advect(*d, p, nx, direction*step)){
             p[0] = nx[0]; p[1] = nx[1];
-            d->itrace_xy.push_back(p[0]); d->itrace_xy.push_back(p[1]);
+            itrace_xy.push_back(p[0]); itrace_xy.push_back(p[1]);
         }else{
             break;
         }
 
     }
 
+    d->itraces_xy.push_back(std::move(itrace_xy));
+
 }
+
+
 
 
 void CGLWidget::mousePressEvent(QMouseEvent* e)
@@ -482,7 +518,6 @@ void CGLWidget::mousePressEvent(QMouseEvent* e)
 
 
      if(e->modifiers() && Qt::ShiftModifier){
-         fprintf(stderr, "shift\n");  
           double wx  = (e->x() - width()/double(2))/width()/trackball.getScale(); // screen norm offset scaled
           double wy =  (height()/double(2) - e->y())/height()/trackball.getScale();
 
@@ -490,16 +525,22 @@ void CGLWidget::mousePressEvent(QMouseEvent* e)
         seed_offset_x = seed_offset_x + wx; // obj norm offset
         seed_offset_y = seed_offset_y + wy;
         d->px = nsx; d->py = nsy;
+
+        // clear and update the trace_xy
+        d->trace_xy.clear();
+        d->trace_xy.push_back(d->px);
+        d->trace_xy.push_back(d->py);
+
         licEnabled = false;
 
     }else{
 
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glLoadMatrixd(projmatrix.data());
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glLoadMatrixd(mvmatrix.data());
+        // glMatrixMode(GL_PROJECTION);
+        // glLoadIdentity();
+        // glLoadMatrixd(projmatrix.data());
+        // glMatrixMode(GL_MODELVIEW);
+        // glLoadIdentity();
+        // glLoadMatrixd(mvmatrix.data());
 
         // // Import the viewPort
         //   GLint *params = new GLint(4);
@@ -530,7 +571,8 @@ void CGLWidget::mousePressEvent(QMouseEvent* e)
 
     
 
-        compute_interavtive_streamline(nsx, nsy);
+        compute_interavtive_streamline(nsx, nsy, 1);
+        compute_interavtive_streamline(nsx, nsy, -1);
 
     }
     updateGL();
@@ -546,7 +588,16 @@ void CGLWidget::mouseMoveEvent(QMouseEvent* e)
 void CGLWidget::wheelEvent(QWheelEvent* e)
 {
     trackball.wheel(e->delta());
+    fprintf(stderr, "scale %f\n", trackball.getScale());
     updateGL();
+}
+
+std::string get_timestamp()
+{
+    auto now = std::time(nullptr);
+    char buf[sizeof("YYYY-MM-DD-HH:MM:SS")];
+    return std::string(buf,buf + 
+        std::strftime(buf,sizeof(buf),"%F-%T",std::localtime(&now)));
 }
 
 
@@ -561,7 +612,7 @@ void CGLWidget::keyPressEvent(QKeyEvent *ev)
         xval = lic_size/d->nu/trackball.getScale();
         yval = lic_size/d->nv/trackball.getScale();
 
-
+        licScale = trackball.getScale(); // will be stored in file if view saved
         generate_seeds(d->px, d->py);
         generate_lic();
         load_texture();
@@ -570,6 +621,52 @@ void CGLWidget::keyPressEvent(QKeyEvent *ev)
 
         
     }
+
+    if (ev->text().toStdString().c_str()[0]=='c'){
+
+        d->itraces_xy.clear();
+        updateGL();
+    }
+
+    // save view
+    if (ev->text().toStdString().c_str()[0]=='p'){
+
+        // for (int i=0;i<16; i++)
+        //     fprintf(stderr, "%f ", projmatrix.data()[i]);
+        // fprintf(stderr, "\n");
+        std::string fname = get_timestamp()+".txt";
+        fprintf(stderr, "Saving view into %s \n", fname.c_str());
+        std::ofstream f1 (fname);
+          if (f1.is_open())
+          {
+            // for (int i=0;i<16; i++)
+            //     f1 << projmatrix.data()[i]<< "\n";
+            // for (int i=0;i<16; i++)
+            //     f1 << mvmatrix.data()[i]<< "\n";
+
+            f1 << d->px << "\n";
+            f1 << d->py << "\n";
+            f1 << seed_offset_x << "\n";
+            f1 << seed_offset_y << "\n";
+            f1 << licScale << "\n";
+            f1 << trackball.getScale() << "\n";
+            // f1 << trackball.getRotation() << "\n";
+            f1.close();
+          }
+            
+    }
+
+    // save view
+    if (ev->text().toStdString().c_str()[0]=='i'){
+
+        QImage img = grabFrameBuffer();
+        std::string fname = get_timestamp()+".png";
+        fprintf(stderr, "Saving screenshot into %s \n", fname.c_str());
+        img.save(fname.c_str());
+
+    }
+
+
 }
 
 

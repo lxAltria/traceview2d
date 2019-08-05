@@ -11,7 +11,7 @@ int main(int argc, char **argv){
 
 
 	// read inputs
-	string ip_filename;
+	string ip_filename, view_filename;
 	
 	using namespace opts;
 
@@ -27,6 +27,7 @@ int main(int argc, char **argv){
 	double lic_size = 150.0, rate=1;
 	int lic_nmax = 50;
 
+	ops >> Option('v', "viewfile", view_filename, "Path to view file"); 
 
 	ops >> PosOption(ip_filename) >> PosOption(offset) >> PosOption(p[0]) >> PosOption(p[1]) >> PosOption(nmax) >> PosOption(step)>> PosOption(lic_size)>> PosOption(lic_nmax)>> PosOption(rate);
 
@@ -66,10 +67,13 @@ int main(int argc, char **argv){
     CGLWidget *widget = new CGLWidget(fmt);
 
     widget->resize(400, 400);
-	widget->d = &dat;
 
-	
+	widget->d = &dat;
+	widget->init(view_filename);
+
+
 	widget->set_lic_size(lic_size, lic_nmax, step, rate);
+
 	widget->show();
 	app.exec();
 
