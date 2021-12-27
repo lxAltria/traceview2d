@@ -9,6 +9,25 @@
 #include "trackball.h"
 #include "Data.h"
 #include <QVector2D>
+#include <unordered_map>
+
+typedef struct critical_point_t{
+  double x[2];
+  double eig_vec[2][2];
+  int type;
+  critical_point_t(double* x_, double eig_v[2][2], int t_){
+    x[0] = x_[0];
+    x[1] = x_[1];
+    eig_vec[0][0] = eig_v[0][0];
+    eig_vec[0][1] = eig_v[0][1];
+    eig_vec[1][0] = eig_v[1][0];
+    eig_vec[1][1] = eig_v[1][1];
+    type = t_;
+  }
+  critical_point_t(){}
+}critical_point_t;
+extern std::vector<std::vector<double>> separatrices;
+extern std::unordered_map<int, critical_point_t> critical_points, saddles;
 
 class QGLShaderProgram;
 
@@ -42,31 +61,16 @@ public:
   std::vector<double> lic_vals;
   std::vector<double> noise;
 
-  void set_lic_size(double lic_size, int lic_nmax, float step, double rate);
-  void generate_seeds(double px, double py);
-  void generate_lic();
-  void keyPressEvent(QKeyEvent *ev);
-
   // streamline related
-  void compute_interavtive_streamline(double sx, double sy, int direction_factor); // direction
+  std::vector<double> compute_interavtive_streamline(double sx, double sy, int direction_factor); // direction
 
-  void init(std::string view_filename);
-
-//  inline void transformPoint(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
-//  inline GLint project(GLdouble objx, GLdouble objy, GLdouble objz,
-//      const GLdouble model[16], const GLdouble proj[16],
-//      const GLint viewport[4],
-//      GLdouble * winx, GLdouble * winy, GLdouble * winz);
-//  void renderText(D3DVECTOR &textPosWorld, QString text);
+  void init();
 
 protected:
   void initializeGL();
   void resizeGL(int w, int h);
   void paintGL();
   
-  void mousePressEvent(QMouseEvent*); 
-  void mouseMoveEvent(QMouseEvent*);
-  // void keyPressEvent(QKeyEvent*); 
   void wheelEvent(QWheelEvent*); 
 
   void load_texture();

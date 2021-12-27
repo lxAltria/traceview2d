@@ -11,7 +11,9 @@ void Data::read_nek5000_nc(const std::string &filename, size_t offset){
         int ret;
         NC_SAFE_CALL( nc_open(filename.c_str(), NC_NOWRITE, &ncid) );
 
-        nu = 512; nv = 512;
+        // nu = 512; nv = 512;
+        // nmax = 10000;
+        // nu = 200; nv = 200;
         res = 1; // unit resolution
         bounds[0][0] = 0;
         bounds[0][1] = nu - 1;
